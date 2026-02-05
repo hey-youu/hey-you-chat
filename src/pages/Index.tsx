@@ -6,113 +6,21 @@ import ChatListItem from "@/components/ChatListItem";
 import EmptyState from "@/components/EmptyState";
 import ChatRoom from "@/components/ChatRoom";
 import SplashScreen from "@/components/SplashScreen";
-
-// Mock data for demonstration
-const mockChats = [
-  {
-    id: "1",
-    name: "Sarah Chen",
-    lastMessage: "Hey! Are you coming to the meeting?",
-    timestamp: "2:34 PM",
-    unreadCount: 2,
-    isOnline: true,
-  },
-  {
-    id: "2",
-    name: "Alex Rivera",
-    lastMessage: "The project looks amazing! 🎉",
-    timestamp: "1:15 PM",
-    unreadCount: 0,
-    isOnline: true,
-  },
-  {
-    id: "3",
-    name: "Jordan Lee",
-    lastMessage: "Let me check and get back to you",
-    timestamp: "Yesterday",
-    unreadCount: 0,
-    isOnline: false,
-  },
-  {
-    id: "4",
-    name: "Morgan Taylor",
-    lastMessage: "Thanks for your help!",
-    timestamp: "Yesterday",
-    unreadCount: 0,
-    isOnline: false,
-  },
-  {
-    id: "5",
-    name: "Casey Kim",
-    lastMessage: "See you tomorrow!",
-    timestamp: "Monday",
-    unreadCount: 0,
-    isOnline: true,
-    isTyping: true,
-  },
-];
-
-const mockGroups = [
-  {
-    id: "g1",
-    name: "Design Team",
-    lastMessage: "New mockups are ready for review",
-    timestamp: "3:00 PM",
-    unreadCount: 5,
-  },
-  {
-    id: "g2",
-    name: "Weekend Plans",
-    lastMessage: "Who's up for hiking?",
-    timestamp: "12:30 PM",
-    unreadCount: 0,
-  },
-];
-
-interface Message {
-  id: string;
-  content: string;
-  timestamp: string;
-  isSent: boolean;
-  status: "sending" | "sent" | "delivered" | "read";
-}
-
-const mockMessages: Message[] = [
-  {
-    id: "m1",
-    content: "Hey! How are you doing?",
-    timestamp: "2:30 PM",
-    isSent: false,
-    status: "read",
-  },
-  {
-    id: "m2",
-    content: "I'm doing great! Just finished working on the new design. What about you?",
-    timestamp: "2:31 PM",
-    isSent: true,
-    status: "read",
-  },
-  {
-    id: "m3",
-    content: "That sounds awesome! I'd love to see it. Are you coming to the meeting later?",
-    timestamp: "2:33 PM",
-    isSent: false,
-    status: "read",
-  },
-  {
-    id: "m4",
-    content: "Yes, I'll be there! See you at 4 ✨",
-    timestamp: "2:34 PM",
-    isSent: true,
-    status: "delivered",
-  },
-];
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
+import ActionModal from "@/components/modals/ActionModal";
+import SettingsModal from "@/components/modals/SettingsModal";
+import { mockChats, mockGroups, mockMessages, type Chat, type Message } from "@/data/mockData";
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
+  const [isOnboarded, setIsOnboarded] = useState(() => {
+    return localStorage.getItem("heyou-onboarded") === "true";
+  });
   const [activeTab, setActiveTab] = useState<"chat" | "group">("chat");
-  const [selectedChat, setSelectedChat] = useState<typeof mockChats[0] | null>(null);
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -120,6 +28,11 @@ const Index = () => {
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem("heyou-onboarded", "true");
+    setIsOnboarded(true);
+  };
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
@@ -132,16 +45,45 @@ const Index = () => {
     setMessages([...messages, newMessage]);
   };
 
+  const handleAction = (action: string) => {
+    console.log("Action triggered:", action);
+    // Handle different actions here
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("heyou-onboarded");
+    setIsOnboarded(false);
+    setIsSettingsModalOpen(false);
+  };
+
   const currentList = activeTab === "chat" ? mockChats : mockGroups;
+
+  // Show splash screen first
+  if (showSplash) {
+    return (
+      <>
+        <GrainTexture />
+        <SplashScreen />
+      </>
+    );
+  }
+
+  // Show onboarding if not completed
+  if (!isOnboarded) {
+    return (
+      <>
+        <GrainTexture />
+        <OnboardingFlow onComplete={handleOnboardingComplete} />
+      </>
+    );
+  }
 
   return (
     <>
       <GrainTexture />
 
       <AnimatePresence mode="wait">
-        {showSplash ? (
-          <SplashScreen key="splash" />
-        ) : selectedChat ? (
+        {selectedChat ? (
           <motion.div
             key="chatroom"
             initial={{ opacity: 0 }}
@@ -184,8 +126,8 @@ const Index = () => {
             <NavigationBar
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              onPlusClick={() => console.log("New chat")}
-              onMenuClick={() => console.log("Menu")}
+              onPlusClick={() => setIsActionModalOpen(true)}
+              onMenuClick={() => setIsSettingsModalOpen(true)}
             />
 
             {/* Content */}
@@ -211,7 +153,7 @@ const Index = () => {
                       >
                         <ChatListItem
                           {...item}
-                          onClick={() => activeTab === "chat" && setSelectedChat(item as typeof mockChats[0])}
+                          onClick={() => activeTab === "chat" && setSelectedChat(item as Chat)}
                         />
                       </motion.div>
                     ))}
@@ -225,6 +167,18 @@ const Index = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modals */}
+      <ActionModal
+        isOpen={isActionModalOpen}
+        onClose={() => setIsActionModalOpen(false)}
+        onAction={handleAction}
+      />
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        onLogout={handleLogout}
+      />
     </>
   );
 };
