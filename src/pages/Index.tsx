@@ -10,21 +10,27 @@ import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import ActionModal from "@/components/modals/ActionModal";
 import SettingsModal from "@/components/modals/SettingsModal";
 import { supabase } from "@/integrations/supabase/client";
-import { mockChats, mockGroups, mockMessages, type Chat, type Message } from "@/data/mockData";
+import { useChats, type ChatWithDetails } from "@/hooks/useChats";
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [session, setSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"chat" | "group">("chat");
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [selectedChat, setSelectedChat] = useState<ChatWithDetails | null>(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
+  const userId = session?.user?.id;
+  const { chats, isLoading: chatsLoading } = useChats(userId);
+
+  // Filter chats by type
+  const directChats = chats.filter((c) => !c.isGroup);
+  const groupChats = chats.filter((c) => c.isGroup);
+  const currentList = activeTab === "chat" ? directChats : groupChats;
+
   // Check auth session
   useEffect(() => {
-    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -32,7 +38,6 @@ const Index = () => {
       }
     );
 
-    // Then get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setIsLoading(false);
@@ -50,20 +55,8 @@ const Index = () => {
   }, []);
 
   const handleOnboardingComplete = async () => {
-    // Refresh session after auth
     const { data: { session } } = await supabase.auth.getSession();
     setSession(session);
-  };
-
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: `m${messages.length + 1}`,
-      content,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      isSent: true,
-      status: "sent",
-    };
-    setMessages([...messages, newMessage]);
   };
 
   const handleAction = (action: string) => {
@@ -75,8 +68,6 @@ const Index = () => {
     setSession(null);
     setIsSettingsModalOpen(false);
   };
-
-  const currentList = activeTab === "chat" ? mockChats : mockGroups;
 
   // Show splash screen first
   if (showSplash) {
@@ -128,11 +119,12 @@ const Index = () => {
             className="h-screen"
           >
             <ChatRoom
+              chatId={selectedChat.id}
               contactName={selectedChat.name}
+              contactAvatar={selectedChat.avatar}
               isOnline={selectedChat.isOnline}
-              messages={messages}
+              userId={userId}
               onBack={() => setSelectedChat(null)}
-              onSendMessage={handleSendMessage}
             />
           </motion.div>
         ) : (
@@ -169,7 +161,21 @@ const Index = () => {
             {/* Content */}
             <main className="flex-1 overflow-hidden">
               <AnimatePresence mode="wait">
-                {currentList.length === 0 ? (
+                {chatsLoading ? (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center justify-center h-full"
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+                    />
+                  </motion.div>
+                ) : currentList.length === 0 ? (
                   <EmptyState key={activeTab} type={activeTab} />
                 ) : (
                   <motion.div
@@ -188,8 +194,14 @@ const Index = () => {
                         transition={{ delay: index * 0.05 }}
                       >
                         <ChatListItem
-                          {...item}
-                          onClick={() => activeTab === "chat" && setSelectedChat(item as Chat)}
+                          id={item.id}
+                          name={item.name}
+                          lastMessage={item.lastMessage}
+                          timestamp={item.timestamp}
+                          unreadCount={item.unreadCount}
+                          isOnline={item.isOnline}
+                          avatar={item.avatar}
+                          onClick={() => setSelectedChat(item)}
                         />
                       </motion.div>
                     ))}

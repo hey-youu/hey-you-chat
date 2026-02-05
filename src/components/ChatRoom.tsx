@@ -3,34 +3,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, Paperclip, Smile, Phone, Video, MoreVertical } from "lucide-react";
 import Avatar from "./Avatar";
 import MessageBubble from "./MessageBubble";
-
-interface Message {
-  id: string;
-  content: string;
-  timestamp: string;
-  isSent: boolean;
-  status?: "sending" | "sent" | "delivered" | "read";
-}
+import { useMessages, type Message } from "@/hooks/useMessages";
 
 interface ChatRoomProps {
+  chatId: string;
   contactName: string;
   contactAvatar?: string;
   isOnline?: boolean;
-  messages: Message[];
+  userId: string;
   onBack: () => void;
-  onSendMessage: (content: string) => void;
 }
 
 const ChatRoom = ({
+  chatId,
   contactName,
   contactAvatar,
   isOnline,
-  messages,
+  userId,
   onBack,
-  onSendMessage,
 }: ChatRoomProps) => {
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { messages, isLoading, sendMessage } = useMessages(chatId, userId);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,9 +34,9 @@ const ChatRoom = ({
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (inputValue.trim()) {
-      onSendMessage(inputValue.trim());
+      await sendMessage(inputValue.trim());
       setInputValue("");
     }
   };
@@ -108,11 +102,32 @@ const ChatRoom = ({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 scrollbar-hide">
-        <AnimatePresence>
-          {messages.map((message) => (
-            <MessageBubble key={message.id} {...message} />
-          ))}
-        </AnimatePresence>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+            />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <p className="text-muted-foreground">No messages yet</p>
+            <p className="text-sm text-muted-foreground/70">Say hey! 👋</p>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                content={message.content}
+                timestamp={message.timestamp}
+                isSent={message.isSent}
+                status={message.status}
+              />
+            ))}
+          </AnimatePresence>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
