@@ -9,19 +9,39 @@ import SplashScreen from "@/components/SplashScreen";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import ActionModal from "@/components/modals/ActionModal";
 import SettingsModal from "@/components/modals/SettingsModal";
+import { supabase } from "@/integrations/supabase/client";
 import { mockChats, mockGroups, mockMessages, type Chat, type Message } from "@/data/mockData";
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
-  const [isOnboarded, setIsOnboarded] = useState(() => {
-    return localStorage.getItem("heyou-onboarded") === "true";
-  });
+  const [session, setSession] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"chat" | "group">("chat");
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
+  // Check auth session
+  useEffect(() => {
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setIsLoading(false);
+      }
+    );
+
+    // Then get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Splash screen timer
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
@@ -29,9 +49,10 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleOnboardingComplete = () => {
-    localStorage.setItem("heyou-onboarded", "true");
-    setIsOnboarded(true);
+  const handleOnboardingComplete = async () => {
+    // Refresh session after auth
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
   };
 
   const handleSendMessage = (content: string) => {
@@ -47,12 +68,11 @@ const Index = () => {
 
   const handleAction = (action: string) => {
     console.log("Action triggered:", action);
-    // Handle different actions here
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("heyou-onboarded");
-    setIsOnboarded(false);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
     setIsSettingsModalOpen(false);
   };
 
@@ -68,8 +88,24 @@ const Index = () => {
     );
   }
 
-  // Show onboarding if not completed
-  if (!isOnboarded) {
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <>
+        <GrainTexture />
+        <div className="flex items-center justify-center h-screen bg-canvas">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full"
+          />
+        </div>
+      </>
+    );
+  }
+
+  // Show onboarding if not logged in
+  if (!session) {
     return (
       <>
         <GrainTexture />

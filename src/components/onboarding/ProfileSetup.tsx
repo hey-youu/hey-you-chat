@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Camera, User, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileSetupProps {
   onComplete: () => void;
@@ -9,25 +11,56 @@ interface ProfileSetupProps {
 const ProfileSetup = ({ onComplete }: ProfileSetupProps) => {
   const [displayName, setDisplayName] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setIsUploading(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatar(reader.result as string);
-        setIsUploading(false);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
-    if (displayName.trim()) {
-      // In real app, save profile to database
+  const handleSubmit = async () => {
+    if (!displayName.trim()) {
+      toast({
+        title: "Please enter a name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ 
+            display_name: displayName.trim(),
+            avatar_url: avatar || undefined,
+          })
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+      }
+
       onComplete();
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Failed to update profile",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,7 +69,7 @@ const ProfileSetup = ({ onComplete }: ProfileSetupProps) => {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="flex flex-col h-full px-6"
+      className="flex flex-col h-full px-6 bg-canvas"
     >
       {/* Header */}
       <div className="pt-12 pb-4">
@@ -80,12 +113,6 @@ const ProfileSetup = ({ onComplete }: ProfileSetupProps) => {
                 src={avatar}
                 alt="Avatar preview"
                 className="w-full h-full object-cover"
-              />
-            ) : isUploading ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full"
               />
             ) : (
               <User className="w-16 h-16 text-muted-foreground" />
@@ -152,11 +179,21 @@ const ProfileSetup = ({ onComplete }: ProfileSetupProps) => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleSubmit}
-          disabled={!displayName.trim()}
+          disabled={!displayName.trim() || isLoading}
           className="w-full py-4 bg-primary text-primary-foreground rounded-2xl font-semibold text-lg shadow-elevated flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Check className="w-5 h-5" />
-          Complete Setup
+          {isLoading ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full"
+            />
+          ) : (
+            <>
+              <Check className="w-5 h-5" />
+              Complete Setup
+            </>
+          )}
         </motion.button>
 
         <motion.button
