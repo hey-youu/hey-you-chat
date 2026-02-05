@@ -1,0 +1,299 @@
+@import "@fontsource/fraunces/400.css";
+@import "@fontsource/fraunces/600.css";
+@import "@fontsource/fraunces/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hey You! Design System - Watercolor Aesthetic */
+
+@layer base {
+  :root {
+    /* Background Colors */
+    --background: 30 20% 96%;
+    --foreground: 0 0% 18%;
+    
+    --canvas: 30 20% 96%;
+    --surface: 0 0% 100%;
+    --soft: 30 16% 92%;
+    
+    /* Card/Popover */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 18%;
+    
+    /* Primary - Mauve */
+    --primary: 252 23% 54%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Olive */
+    --secondary: 63 14% 48%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent - Terracotta */
+    --accent: 18 46% 56%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Mint */
+    --mint: 156 23% 71%;
+    --mint-foreground: 0 0% 18%;
+    
+    /* Text Colors */
+    --text-primary: 0 0% 18%;
+    --text-secondary: 0 0% 42%;
+    --text-muted: 0 0% 60%;
+    
+    /* Muted */
+    --muted: 30 16% 92%;
+    --muted-foreground: 0 0% 42%;
+    
+    /* State Colors */
+    --success: 156 26% 59%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 60% 69%;
+    --warning-foreground: 0 0% 18%;
+    --destructive: 0 43% 65%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* UI */
+    --border: 30 16% 88%;
+    --input: 30 16% 92%;
+    --ring: 252 23% 54%;
+    --radius: 1rem;
+    
+    /* Sidebar */
+    --sidebar-background: 30 20% 96%;
+    --sidebar-foreground: 0 0% 42%;
+    --sidebar-primary: 252 23% 54%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 30 16% 92%;
+    --sidebar-accent-foreground: 0 0% 18%;
+    --sidebar-border: 30 16% 88%;
+    --sidebar-ring: 252 23% 54%;
+    
+    /* Gradients */
+    --gradient-mauve: linear-gradient(135deg, hsl(252 23% 54%) 0%, hsl(252 30% 65%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(18 46% 56%) 0%, hsl(35 60% 69%) 100%);
+    --gradient-cool: linear-gradient(135deg, hsl(156 23% 71%) 0%, hsl(252 23% 54%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(30 16% 98%) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.03);
+    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.06);
+    --shadow-lg: 0 12px 32px -4px hsl(0 0% 0% / 0.08);
+    --shadow-xl: 0 24px 48px -8px hsl(0 0% 0% / 0.1);
+    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.04), 0 4px 16px -4px hsl(0 0% 0% / 0.06);
+    --shadow-elevated: 0 8px 24px -4px hsl(252 23% 54% / 0.15);
+  }
+
+  .dark {
+    --background: 240 10% 8%;
+    --foreground: 0 0% 95%;
+    
+    --canvas: 240 10% 8%;
+    --surface: 240 10% 12%;
+    --soft: 240 10% 16%;
+    
+    --card: 240 10% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 12%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 252 30% 65%;
+    --primary-foreground: 0 0% 8%;
+    
+    --secondary: 63 20% 55%;
+    --secondary-foreground: 0 0% 8%;
+    
+    --accent: 18 50% 62%;
+    --accent-foreground: 0 0% 8%;
+    
+    --mint: 156 28% 65%;
+    --mint-foreground: 0 0% 8%;
+    
+    --text-primary: 0 0% 95%;
+    --text-secondary: 0 0% 70%;
+    --text-muted: 0 0% 50%;
+    
+    --muted: 240 10% 16%;
+    --muted-foreground: 0 0% 60%;
+    
+    --success: 156 30% 55%;
+    --warning: 35 65% 65%;
+    --destructive: 0 50% 55%;
+    
+    --border: 240 10% 20%;
+    --input: 240 10% 16%;
+    --ring: 252 30% 65%;
+    
+    --sidebar-background: 240 10% 10%;
+    --sidebar-foreground: 0 0% 70%;
+    --sidebar-primary: 252 30% 65%;
+    --sidebar-primary-foreground: 0 0% 8%;
+    --sidebar-accent: 240 10% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 10% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-canvas text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', Georgia, serif;
+  }
+}
+
+@layer components {
+  /* Grain Texture Overlay */
+  .grain-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+  
+  /* Message Bubbles */
+  .message-sent {
+    @apply bg-primary text-primary-foreground rounded-2xl rounded-br-md;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .message-received {
+    @apply bg-soft text-foreground rounded-2xl rounded-bl-md;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  /* Navigation Tab Pill */
+  .nav-pill {
+    @apply relative inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium transition-all duration-200;
+  }
+  
+  .nav-pill-active {
+    @apply text-foreground;
+  }
+  
+  .nav-pill-inactive {
+    @apply text-muted-foreground hover:text-foreground/80;
+  }
+  
+  /* Card Hover Effect */
+  .card-interactive {
+    @apply transition-all duration-200 cursor-pointer;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .card-interactive:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+  }
+  
+  .card-interactive:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
+  }
+  
+  /* Avatar Ring */
+  .avatar-online::after {
+    content: '';
+    @apply absolute bottom-0 right-0 w-3 h-3 bg-mint rounded-full border-2 border-surface;
+  }
+  
+  /* Watercolor Button */
+  .btn-watercolor {
+    @apply relative overflow-hidden;
+    background: var(--gradient-mauve);
+  }
+  
+  .btn-watercolor::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.2) 0%, transparent 50%);
+  }
+  
+  .btn-watercolor:hover::before {
+    @apply opacity-100;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .font-heading {
+    font-family: 'Fraunces', Georgia, serif;
+  }
+  
+  .font-body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  .bg-canvas {
+    background-color: hsl(var(--canvas));
+  }
+  
+  .bg-surface {
+    background-color: hsl(var(--surface));
+  }
+  
+  .bg-soft {
+    background-color: hsl(var(--soft));
+  }
+  
+  .text-text-primary {
+    color: hsl(var(--text-primary));
+  }
+  
+  .text-text-secondary {
+    color: hsl(var(--text-secondary));
+  }
+  
+  .text-text-muted {
+    color: hsl(var(--text-muted));
+  }
+  
+  .bg-mint {
+    background-color: hsl(var(--mint));
+  }
+  
+  .text-mint {
+    color: hsl(var(--mint));
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  
+  /* Scrollbar Styling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
