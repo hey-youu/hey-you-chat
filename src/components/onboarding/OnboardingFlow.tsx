@@ -2,11 +2,10 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Users, Sparkles, ArrowRight } from "lucide-react";
 import OnboardingSlide from "./OnboardingSlide";
-import PhoneInput from "./PhoneInput";
-import OTPVerification from "./OTPVerification";
+import AuthScreen from "../auth/AuthScreen";
 import ProfileSetup from "./ProfileSetup";
 
-type OnboardingStep = "slides" | "phone" | "otp" | "profile";
+type OnboardingStep = "slides" | "auth" | "profile";
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -36,22 +35,16 @@ const slides = [
 const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [step, setStep] = useState<OnboardingStep>("slides");
   const [slideIndex, setSlideIndex] = useState(0);
-  const [phoneNumber, setPhoneNumber] = useState("");
 
   const handleNextSlide = () => {
     if (slideIndex < slides.length - 1) {
       setSlideIndex(slideIndex + 1);
     } else {
-      setStep("phone");
+      setStep("auth");
     }
   };
 
-  const handlePhoneSubmit = (phone: string) => {
-    setPhoneNumber(phone);
-    setStep("otp");
-  };
-
-  const handleOTPVerified = () => {
+  const handleAuthSuccess = () => {
     setStep("profile");
   };
 
@@ -109,7 +102,7 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 <motion.button
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  onClick={() => setStep("phone")}
+                  onClick={() => setStep("auth")}
                   className="w-full mt-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Skip
@@ -119,21 +112,11 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
           </motion.div>
         )}
 
-        {step === "phone" && (
-          <PhoneInput
-            key="phone"
-            onSubmit={handlePhoneSubmit}
+        {step === "auth" && (
+          <AuthScreen
+            key="auth"
+            onSuccess={handleAuthSuccess}
             onBack={() => setStep("slides")}
-          />
-        )}
-
-        {step === "otp" && (
-          <OTPVerification
-            key="otp"
-            phoneNumber={phoneNumber}
-            onVerified={handleOTPVerified}
-            onBack={() => setStep("phone")}
-            onResend={() => console.log("Resending OTP...")}
           />
         )}
 
